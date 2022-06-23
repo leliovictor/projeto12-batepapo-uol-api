@@ -1,7 +1,7 @@
 {
   "name": "projeto12-batepapo-uol-api",
   "version": "1.0.0",
-  "type":"module",
+  "type": "module",
   "description": "",
   "main": "server.js",
   "scripts": {
@@ -12,7 +12,10 @@
   "license": "ISC",
   "dependencies": {
     "cors": "^2.8.5",
+    "dayjs": "^1.11.3",
+    "dotenv": "^16.0.1",
     "express": "^4.18.1",
+    "mongodb": "^4.7.0",
     "nodemon": "^2.0.16"
   }
 }

@@ -6,38 +6,43 @@ import dayjs from "dayjs";
 
 dotenv.config();
 
-// time = dayjs().format('HH:mm:ss');
-
 const mongoClient = new MongoClient(process.env.MONGO_URI);
 let db = null;
 
 mongoClient.connect().then(() => {
-	db = mongoClient.db("UOL_API");
+  db = mongoClient.db("UOL_API");
 });
 
 const server = express();
 server.use(cors());
 server.use(express.json());
 
-server.post("/participants",(req,res) => {
-    const { name } = req.body;
-    if(!name) return res.sendStatus(422);
+server.post("/participants", (req, res) => {
+  const { name } = req.body;
+  if (!name) return res.sendStatus(422);
+  //VALIDAÇÂO AQUI SERÀ FEITA COM JOI, AINDA ENSINARÀ
 
-    db.collection("UOL_API").insertOne({
-        name: name,
-        lastStatus: Date.now()
-    });
+  db.collection("users").insertOne({
+    name: name,
+    lastStatus: Date.now(),
+  });
 
-    //Usar o try aqui e passar isso para um get ou checar como fazer validação
-    console.log(db.collection("UOL_API").find().toArray().then(name => {
-        console.log(name);
-    }));
+  db.collection("messages").insertOne({
+    from: name,
+    to: "Todos",
+    text: "entra na sala...",
+    type: "status",
+    time: dayjs().format('HH:mm:ss')
+  });
 
-    res.send(name);
+  res.sendStatus(201);
 });
 
+server.get("/participants",(req,res)=>{
+    res.send('ok');
+});
+
+
 //SETINTERVAL PARA REMOVER INATIVO
-
-
 
 server.listen(5000);

@@ -32,21 +32,41 @@ server.post("/participants", (req, res) => {
     to: "Todos",
     text: "entra na sala...",
     type: "status",
-    time: dayjs().format('HH:mm:ss')
+    time: dayjs().format("HH:mm:ss"),
   });
 
   res.sendStatus(201);
 });
 
-server.get("/participants",(req,res)=>{
-    const promise = db.collection("users").find({}).toArray();
-    
-    promise
-    .then(users => res.send(users))
-    .catch(e => res.sendStatus(500));
+server.get("/participants", async (req, res) => {
+  try {
+    const users = await db.collection("users").find({}).toArray();
+    res.send(users);
+  } catch (error) {
+    res.sendStatus(500);
+  }
 });
 
+server.get("/messages", async (req, res) => {
+  const limit = parseInt(req.query.limit);
+  const { user } = req.headers;
+  try {
+    let messages = await db
+      .collection("messages")
+      .find({
+        $or: [{ to: "Todos" }, { from: user }, { to: user }],
+      })
+      .toArray();
 
+    if (limit) {
+      messages = messages.slice(messages.length - limit, messages.length);
+    }
+
+    res.send(messages);
+  } catch (error) {
+    res.sendStatus(500);
+  }
+});
 
 //SETINTERVAL PARA REMOVER INATIVO
 

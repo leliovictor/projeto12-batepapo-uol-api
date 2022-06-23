@@ -39,8 +39,13 @@ server.post("/participants", (req, res) => {
 });
 
 server.get("/participants",(req,res)=>{
-    res.send('ok');
+    const promise = db.collection("users").find({}).toArray();
+    
+    promise
+    .then(users => res.send(users))
+    .catch(e => res.sendStatus(500));
 });
+
 
 
 //SETINTERVAL PARA REMOVER INATIVO

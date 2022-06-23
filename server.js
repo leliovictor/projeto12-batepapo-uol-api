@@ -47,6 +47,21 @@ server.get("/participants", async (req, res) => {
   }
 });
 
+server.post("/messages", (req, res) => {
+  const { to, text, type } = req.body;
+  const { user } = req.headers;
+
+  db.collection("messages").insertOne({
+    from: user,
+    to,
+    text,
+    type,
+    time: dayjs().format("HH:mm:ss"),
+  });
+
+  res.sendStatus(201);
+});
+
 server.get("/messages", async (req, res) => {
   const limit = parseInt(req.query.limit);
   const { user } = req.headers;

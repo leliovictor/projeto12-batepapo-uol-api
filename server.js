@@ -111,8 +111,23 @@ server.get("/messages", async (req, res) => {
   }
 });
 
-server.post("/status", (req, res) => {});
+server.post("/status", async (req, res) => {
+  const { user } = req.headers;
 
-//SETINTERVAL PARA REMOVER INATIVO
+  try {
+    const findUser = await db.collection("users").findOne({ name: user });
+    if (!findUser) return res.sendStatus(404);
+
+    await db
+      .collection("users")
+      .updateOne({ name: user }, { $set: { lastStatus: Date.now() } });
+
+    res.sendStatus(200);
+  } catch {
+    res.sendStatus(500);
+  }
+});
+
+//SETINTERVAL PARA REMOVER INATIVO A CADA 15 SEG CRIAR A FUNCAO QUE FAZ E SÓ CHAMAR ou () =>
 
 server.listen(5000);

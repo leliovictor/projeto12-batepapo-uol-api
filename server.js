@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import { MongoClient } from "mongodb";
 import dayjs from "dayjs";
+import joi from "joi";
 
 dotenv.config();
 
@@ -17,25 +18,46 @@ const server = express();
 server.use(cors());
 server.use(express.json());
 
-server.post("/participants", (req, res) => {
+const userSchema = joi.object({
+  name: joi.string().required(),
+});
+
+//mudar para message Schema
+const messageSchema = joi.object({
+  from: joi.string().required(),
+  to: joi.number().required(),
+  text: joi.string().email().required(),
+  type: joi.string().email().required(),
+});
+
+server.post("/participants", async (req, res) => {
+  const userValidation = userSchema.validate(req.body);
+  if (userValidation.error) return res.sendStatus(422);
+
   const { name } = req.body;
-  if (!name) return res.sendStatus(422);
-  //VALIDAÇÂO AQUI SERÀ FEITA COM JOI, AINDA ENSINARÀ
 
-  db.collection("users").insertOne({
-    name: name,
-    lastStatus: Date.now(),
-  });
+  try {
+    const checkAlreadyOn = await db.collection("users").findOne({ name: name });
+    if (checkAlreadyOn) return res.sendStatus(409);
 
-  db.collection("messages").insertOne({
-    from: name,
-    to: "Todos",
-    text: "entra na sala...",
-    type: "status",
-    time: dayjs().format("HH:mm:ss"),
-  });
+    db.collection("users").insertOne({
+      name: name,
+      lastStatus: Date.now(),
+    });
 
-  res.sendStatus(201);
+    db.collection("messages").insertOne({
+      from: name,
+      to: "Todos",
+      text: "entra na sala...",
+      type: "status",
+      time: dayjs().format("HH:mm:ss"),
+    });
+
+    res.sendStatus(201);
+    
+  } catch {
+    res.sendStatus(500);
+  }
 });
 
 server.get("/participants", async (req, res) => {
@@ -82,6 +104,8 @@ server.get("/messages", async (req, res) => {
     res.sendStatus(500);
   }
 });
+
+server.post("/status", (req, res) => {});
 
 //SETINTERVAL PARA REMOVER INATIVO
 

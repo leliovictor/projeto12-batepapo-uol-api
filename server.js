@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import { MongoClient } from "mongodb";
+import { MongoClient, ObjectId } from "mongodb";
 import dayjs from "dayjs";
 import joi from "joi";
 
@@ -154,5 +154,24 @@ setInterval(async () => {
     }
   });
 }, TIME_15SEG);
+
+server.delete("/messages/:id", async (req, res) => {
+  const { id } = req.params;
+  const { user } = req.headers;
+
+  try {
+    const findMessage = await db
+      .collection("messages")
+      .findOne({ _id: new ObjectId(id) });
+    if (!findMessage) return res.sendStatus(404);
+    if (findMessage.from !== user) return res.sendStatus(401);
+
+    await db.collection("messages").deleteOne({ _id: new ObjectId(id) });
+
+    res.sendStatus(202);
+  } catch {
+    res.sendStatus(500);
+  }
+});
 
 server.listen(5000);

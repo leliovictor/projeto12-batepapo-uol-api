@@ -98,10 +98,10 @@ server.get("/messages", async (req, res) => {
       .collection("messages")
       .find({
         $or: [
-          { type: "status" },
-          { type: "message" },
           { from: user },
           { to: user },
+          { to: "Todos" },
+          { type: "message" },
         ],
       })
       .toArray();
@@ -167,6 +167,43 @@ server.delete("/messages/:id", async (req, res) => {
     if (findMessage.from !== user) return res.sendStatus(401);
 
     await db.collection("messages").deleteOne({ _id: new ObjectId(id) });
+
+    res.sendStatus(202);
+  } catch {
+    res.sendStatus(500);
+  }
+});
+
+server.put("/messages/:id", async (req, res) => {
+  const { id } = req.params;
+  const { user } = req.headers;
+  const { to, text, type } = req.body;
+
+  try {
+    const checkParticipantOn = await db
+      .collection("users")
+      .findOne({ name: user });
+    const messageValidation = messageSchema.validate(req.body);
+    if (!checkParticipantOn || messageValidation.error)
+      return res.sendStatus(422);
+
+    const findMessage = await db
+      .collection("messages")
+      .findOne({ _id: new ObjectId(id) });
+    if (!findMessage) return res.sendStatus(404);
+    if (findMessage.from !== user) return res.sendStatus(401);
+
+    db.collection("messages").updateOne(
+      { _id: new ObjectId(id) },
+      {
+        $set: {
+          to,
+          text,
+          type,
+          time: dayjs().format("HH:mm:ss"),
+        },
+      }
+    );
 
     res.sendStatus(202);
   } catch {

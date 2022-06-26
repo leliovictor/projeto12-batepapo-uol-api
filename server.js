@@ -97,7 +97,12 @@ server.get("/messages", async (req, res) => {
     let messages = await db
       .collection("messages")
       .find({
-        $or: [{ to: "Todos" }, { from: user }, { to: user }],
+        $or: [
+          { type: "status" },
+          { type: "message" },
+          { from: user },
+          { to: user },
+        ],
       })
       .toArray();
 
@@ -128,6 +133,26 @@ server.post("/status", async (req, res) => {
   }
 });
 
-//SETINTERVAL PARA REMOVER INATIVO A CADA 15 SEG CRIAR A FUNCAO QUE FAZ E SÓ CHAMAR ou () =>
+const TIME_15SEG = 15000;
+setInterval(async () => {
+  const allUsers = await db.collection("users").find({}).toArray();
+
+  const refreshTime = Date.now();
+  const TIME_10SEG = 10000;
+
+  allUsers.map(async (userObject) => {
+    if (refreshTime - userObject.lastStatus > TIME_10SEG) {
+      await db.collection("users").deleteOne(userObject);
+
+      await db.collection("messages").insertOne({
+        from: userObject.name,
+        to: "Todos",
+        text: "sai da sala...",
+        type: "status",
+        time: dayjs().format("HH:mm:ss"),
+      });
+    }
+  });
+}, TIME_15SEG);
 
 server.listen(5000);

@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import { MongoClient, ObjectId } from "mongodb";
 import dayjs from "dayjs";
 import joi from "joi";
+import { stripHtml } from "string-strip-html";
 
 dotenv.config();
 
@@ -27,7 +28,7 @@ const messageSchema = joi.object({
 });
 
 server.post("/participants", async (req, res) => {
-  const { name } = req.body;
+  const name = stripHtml(`${req.body.name}`).result.trim();
 
   const userValidation = userSchema.validate(name);
   if (userValidation.error) return res.sendStatus(422);
@@ -65,8 +66,10 @@ server.get("/participants", async (req, res) => {
 });
 
 server.post("/messages", async (req, res) => {
-  const { user } = req.headers;
-  const { to, text, type } = req.body;
+  const user = stripHtml(`${req.headers.user}`).result.trim();
+  const to = stripHtml(`${req.body.to}`).result.trim();
+  const text = stripHtml(`${req.body.text}`).result.trim();
+  const type = stripHtml(`${req.body.type}`).result.trim();
 
   try {
     const checkParticipantOn = await db
@@ -117,7 +120,7 @@ server.get("/messages", async (req, res) => {
 });
 
 server.post("/status", async (req, res) => {
-  const { user } = req.headers;
+  const user = stripHtml(`${req.headers.user}`).result.trim();
 
   try {
     const findUser = await db.collection("users").findOne({ name: user });
@@ -157,7 +160,8 @@ setInterval(async () => {
 
 server.delete("/messages/:id", async (req, res) => {
   const { id } = req.params;
-  const { user } = req.headers;
+
+  const user = stripHtml(`${req.headers.user}`).result.trim();
 
   try {
     const findMessage = await db
@@ -176,8 +180,11 @@ server.delete("/messages/:id", async (req, res) => {
 
 server.put("/messages/:id", async (req, res) => {
   const { id } = req.params;
-  const { user } = req.headers;
-  const { to, text, type } = req.body;
+
+  const user = stripHtml(`${req.headers.user}`).result.trim();
+  const to = stripHtml(`${req.body.to}`).result.trim();
+  const text = stripHtml(`${req.body.text}`).result.trim();
+  const type = stripHtml(`${req.body.type}`).result.trim();
 
   try {
     const checkParticipantOn = await db
